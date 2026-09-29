@@ -17,7 +17,7 @@ dependencies = [
 # The pinned tempo: engine + server + client, and the baseline agents. One SHA, bumped with
 # scripts/bump-tempo.sh. Kept optional so tests (fake server) run without building Rust.
 tempo = [
-    "tempo-arena @ git+https://github.com/tempoarena/tempo@6c765716af15910efbd892da4b2c25d4d571030e",
+    "tempo-arena @ git+https://github.com/tempoarena/tempo@b4cb4f6934ad4de905fa1a44d255585ab34a692e",
 ]
 
 [project.scripts]
@@ -51,3 +51,8 @@ ignore = ["RUF001", "RUF002", "RUF003"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+
+[tool.uv]
+# Same constraint as tempo: numpy >= 2.3 ships manylinux_2_28 wheels only, and development hosts
+# on glibc 2.26 (Amazon Linux 2) would build it from source and fail. Constrains this lock only.
+constraint-dependencies = ["numpy<2.3"]

@@ -18,6 +18,9 @@ from dataclasses import dataclass, field
 from .ratings import Rating, rate, team_ranks
 from .results import Sample, Seat
 
+#: identifying fields games put in `outcome.per_seat` that are not metrics
+NOT_METRICS = frozenset({"seat", "team", "index"})
+
 
 def entry_key(seat: Seat) -> str:
     return f"{seat.name}|{seat.klass}|{seat.obs_mode}"
@@ -140,6 +143,8 @@ def build_entries(samples: list[Sample]) -> dict[str, dict[str, Entry]]:
             e.tokens_in += int(usage.get("tokens_in") or 0)
             e.tokens_out += int(usage.get("tokens_out") or 0)
             for mk, mv in s.seat_outcome(seat.index).items():
+                if mk in NOT_METRICS:
+                    continue
                 if isinstance(mv, (int, float)) and not isinstance(mv, bool):
                     e.metric_sums[mk] += float(mv)
                     e.metric_counts[mk] += 1
