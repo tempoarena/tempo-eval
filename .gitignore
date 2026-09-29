@@ -26,3 +26,4 @@ heldout*.txt
 .idea/
 .vscode/
 .claude/
+/.tools/

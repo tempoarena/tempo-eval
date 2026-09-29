@@ -98,8 +98,24 @@ def free_port() -> int:
         return s.getsockname()[1]
 
 
+#: where scripts/build-server.sh puts the pinned tempo-server binary
+TOOLS_BIN = Path(__file__).resolve().parents[2] / ".tools" / "bin" / "tempo-server"
+
+
+def _python_serve_available() -> bool:
+    try:
+        from tempo import _native  # type: ignore[import-not-found]
+    except ImportError:
+        return False
+    return hasattr(_native, "serve")
+
+
 def server_command(host: str, port: int, runs_dir: Path) -> list[str]:
+    """How to start a server: `$TEMPO_SERVER_BIN`, else `tempo.serve` from the pinned package,
+    else the binary `scripts/build-server.sh` built at the same pin."""
     binary = os.environ.get("TEMPO_SERVER_BIN")
+    if not binary and not _python_serve_available() and TOOLS_BIN.exists():
+        binary = str(TOOLS_BIN)
     if binary:
         return [binary, "--host", host, "--port", str(port), "--runs", str(runs_dir)]
     code = f"import tempo; tempo.serve(host={host!r}, port={port}, runs_dir={str(runs_dir)!r})"

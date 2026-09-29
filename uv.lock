@@ -497,7 +497,7 @@ wheels = [
 [[package]]
 name = "tempo-arena"
 version = "0.1.0"
-source = { git = "https://github.com/tempoarena/tempo?rev=b4cb4f6934ad4de905fa1a44d255585ab34a692e#b4cb4f6934ad4de905fa1a44d255585ab34a692e" }
+source = { git = "https://github.com/tempoarena/tempo?rev=e6587c88db03b5641a23254a71eb7f402dc63f6e#e6587c88db03b5641a23254a71eb7f402dc63f6e" }
 dependencies = [
     { name = "numpy" },
     { name = "websockets", version = "16.1.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
@@ -532,7 +532,7 @@ requires-dist = [
     { name = "openskill", specifier = ">=6.0" },
     { name = "pydantic", specifier = ">=2.7" },
     { name = "pyyaml", specifier = ">=6.0" },
-    { name = "tempo-arena", marker = "extra == 'tempo'", git = "https://github.com/tempoarena/tempo?rev=b4cb4f6934ad4de905fa1a44d255585ab34a692e" },
+    { name = "tempo-arena", marker = "extra == 'tempo'", git = "https://github.com/tempoarena/tempo?rev=e6587c88db03b5641a23254a71eb7f402dc63f6e" },
 ]
 provides-extras = ["tempo"]
 
