@@ -141,6 +141,8 @@ class FakeServer:
                         "tokens_in": 0 if bot else 50_000,
                         "tokens_out": 0 if bot else 2_000,
                         "cost_usd": 0.0 if bot else 0.05,
+                        "calls": 0 if bot else 10,
+                        "latency_ms_total": 0.0 if bot else 9_000.0,
                     },
                 }
             )

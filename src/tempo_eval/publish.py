@@ -13,7 +13,7 @@ import re
 from datetime import datetime, timezone
 from pathlib import Path
 
-from .metrics import Entry, build_entries, weighted_median, wilson
+from .metrics import Entry, build_entries, wilson
 from .pareto import LAT_MIN_MS, frontier, hypervolume
 from .results import Loaded
 
@@ -35,18 +35,20 @@ def _entry_json(e: Entry) -> dict:
     lo, hi = wilson(e.wins, e.matches)
     total = e.answered + e.missed
     points = []
-    for suite, (wins, n, lat_pairs) in sorted(e.suites.items()):
-        lat = weighted_median(lat_pairs)
-        if lat is not None and n:
+    for suite, st in sorted(e.suites.items()):
+        lat = st.decision_latency_ms
+        if lat is not None and st.matches:
             points.append(
                 {
                     "suite": _safe(suite),
-                    "latency_ms_p50": _r(lat, 2),
-                    "win_rate": _r(wins / n),
-                    "matches": n,
+                    "decision_latency_ms": _r(lat, 2),
+                    "win_rate": _r(st.wins / st.matches),
+                    "matches": st.matches,
                 }
             )
-    hv = hypervolume([(p["latency_ms_p50"], p["win_rate"]) for p in points]) if points else None
+    hv = (
+        hypervolume([(p["decision_latency_ms"], p["win_rate"]) for p in points]) if points else None
+    )
     return {
         "name": _safe(e.name),
         "agent": _safe(e.agent),
@@ -63,6 +65,9 @@ def _entry_json(e: Entry) -> dict:
         "win_rate_ci": [_r(lo), _r(hi)],
         "latency_ms_p50": _r(e.latency_p50, 2),
         "latency_ms_p95": _r(e.latency_p95, 2),
+        "think_ms_mean": _r(e.think_ms_mean, 2),
+        "decision_latency_ms": _r(e.decision_latency_ms, 2),
+        "model_calls": e.calls,
         "missed_deadline_rate": _r(e.missed / total) if total else None,
         "cost_per_min_usd": _r(e.cost_per_min, 6),
         "tokens_in": e.tokens_in,
@@ -87,10 +92,14 @@ def build_leaderboard(loaded: Loaded) -> dict:
         on_front = [
             r
             for r in rows
-            if r["rating"] is not None and (r["latency_ms_p50"] is not None or r["kind"] == "bot")
+            if r["rating"] is not None
+            and (r["decision_latency_ms"] is not None or r["kind"] == "bot")
         ]
         pts = [
-            (r["latency_ms_p50"] if r["latency_ms_p50"] is not None else LAT_MIN_MS, r["rating"])
+            (
+                r["decision_latency_ms"] if r["decision_latency_ms"] is not None else LAT_MIN_MS,
+                r["rating"],
+            )
             for r in on_front
         ]
         named = [r["name"] for r in on_front]
@@ -134,7 +143,7 @@ def render_report(board: dict) -> str:
             f"hypervolume {g['hypervolume']}.",
             "",
             "| # | entrant | class | obs | rating | ± | matches | win rate (95% CI) "
-            "| p50 ms | p95 ms | $/min |",
+            "| decision ms | answer p50 ms | $/min |",
             "|---|---|---|---|---:|---:|---:|---|---:|---:|---:|",
         ]
         for i, r in enumerate(g["entries"], 1):
@@ -142,7 +151,7 @@ def render_report(board: dict) -> str:
             lines.append(
                 f"| {i} | {r['name']} | {r['class']} | {r['obs_mode']} | {r['rating']} | "
                 f"{r['rating_sd']} | {r['matches']} | {r['win_rate']:.2f} "
-                f"({ci[0]:.2f}–{ci[1]:.2f}) | {r['latency_ms_p50']} | {r['latency_ms_p95']} | "
+                f"({ci[0]:.2f}–{ci[1]:.2f}) | {r['decision_latency_ms']} | {r['latency_ms_p50']} | "
                 f"{r['cost_per_min_usd']} |"
             )
         lines.append("")

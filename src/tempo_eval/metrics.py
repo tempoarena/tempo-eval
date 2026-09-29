@@ -7,6 +7,13 @@ Latency is aggregated from each match's per-seat summary (`stats.per_seat[i].lat
 p50 is the answer-weighted median of the match medians and p95 the answer-weighted mean of the
 match p95s. That is an approximation of the pooled percentiles, stated here rather than hidden;
 the pooled values would need every match's `latency.jsonl`.
+
+Two latencies, because real-time agents have two loops. `latency_ms` is what the server measures
+per answer (observation sent -> pad received): an agent that drives its pad every tick through
+skills while a model thinks beside it answers in well under a millisecond. `think_ms_mean` is
+the agent's own model-call latency (`usage.latency_ms_total / usage.calls`), which is how long
+its decisions take to form. The frontier plots `decision_latency_ms`: think time when the entry
+calls a model, answer latency otherwise.
 """
 
 from __future__ import annotations
@@ -51,6 +58,21 @@ def weighted_median(pairs: list[tuple[float, float]]) -> float | None:
 
 
 @dataclass
+class SuiteStats:
+    """One entry's showing in one suite: a point on its own latency/capability curve."""
+
+    wins: float = 0.0
+    matches: int = 0
+    lat_p50: list = field(default_factory=list)
+    think_ms_total: float = 0.0
+    calls: int = 0
+
+    @property
+    def decision_latency_ms(self) -> float | None:
+        return self.think_ms_total / self.calls if self.calls else weighted_median(self.lat_p50)
+
+
+@dataclass
 class Entry:
     key: str
     name: str
@@ -72,8 +94,18 @@ class Entry:
     lat_p95: list = field(default_factory=list)
     metric_sums: dict = field(default_factory=lambda: defaultdict(float))
     metric_counts: dict = field(default_factory=lambda: defaultdict(int))
-    suites: dict = field(default_factory=dict)  # suite -> [wins, matches, lat pairs]
+    think_ms_total: float = 0.0
+    calls: int = 0
+    suites: dict = field(default_factory=dict)  # suite -> SuiteStats
     rating: Rating | None = None
+
+    @property
+    def think_ms_mean(self) -> float | None:
+        return self.think_ms_total / self.calls if self.calls else None
+
+    @property
+    def decision_latency_ms(self) -> float | None:
+        return self.think_ms_mean if self.calls else self.latency_p50
 
     @property
     def win_rate(self) -> float:
@@ -142,6 +174,12 @@ def build_entries(samples: list[Sample]) -> dict[str, dict[str, Entry]]:
             e.cost_usd += float(usage.get("cost_usd") or 0.0)
             e.tokens_in += int(usage.get("tokens_in") or 0)
             e.tokens_out += int(usage.get("tokens_out") or 0)
+            think, calls = float(usage.get("latency_ms_total") or 0.0), int(usage.get("calls") or 0)
+            e.think_ms_total += think
+            e.calls += calls
+            st = e.suites.setdefault(s.suite, SuiteStats())
+            st.think_ms_total += think
+            st.calls += calls
             for mk, mv in s.seat_outcome(seat.index).items():
                 if mk in NOT_METRICS:
                     continue
@@ -156,11 +194,10 @@ def build_entries(samples: list[Sample]) -> dict[str, dict[str, Entry]]:
             e.wins += score or 0.0
             e.verified += 1 if s.verified else 0
             e.game_minutes += s.game_minutes
-            st = e.suites.setdefault(s.suite, [0.0, 0, []])
-            st[0] += score or 0.0
-            st[1] += 1
+            st.wins += score or 0.0
+            st.matches += 1
             if lat.get("p50") is not None:
-                st[2].append((float(lat["p50"]), max(answered, 1)))
+                st.lat_p50.append((float(lat["p50"]), max(answered, 1)))
     for game, entries in by_game.items():
         table = rate([s for s in samples if s.game == game], key=entry_key)
         for k, e in entries.items():

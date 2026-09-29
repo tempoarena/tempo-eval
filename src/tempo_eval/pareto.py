@@ -28,8 +28,13 @@ def speed(latency_ms: float) -> float:
 
 
 def frontier(points: Sequence[tuple[float, float]]) -> list[int]:
-    """Indices of the non-dominated `(latency_ms, capability)` points, fastest first."""
-    order = sorted(range(len(points)), key=lambda i: (points[i][0], -points[i][1]))
+    """Indices of the non-dominated `(latency_ms, capability)` points, fastest first.
+
+    Latencies under LAT_MIN_MS count as LAT_MIN_MS: below a millisecond the axis cannot tell
+    entries apart, so a 0.25 ms random agent does not "beat" an in-tick bot on speed.
+    """
+    lat = [max(p[0], LAT_MIN_MS) for p in points]
+    order = sorted(range(len(points)), key=lambda i: (lat[i], -points[i][1]))
     out: list[int] = []
     best = -math.inf
     for i in order:
