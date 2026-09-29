@@ -146,7 +146,7 @@ def build_entries(samples: list[Sample]) -> dict[str, dict[str, Entry]]:
     by_game: dict[str, dict[str, Entry]] = defaultdict(dict)
     for s in samples:
         entries = by_game[s.game]
-        counted: set[str] = set()
+        seat_scores: dict[str, list[float]] = {}
         for seat in s.seats:
             k = entry_key(seat)
             e = entries.get(k) or entries.setdefault(
@@ -186,18 +186,22 @@ def build_entries(samples: list[Sample]) -> dict[str, dict[str, Entry]]:
                 if isinstance(mv, (int, float)) and not isinstance(mv, bool):
                     e.metric_sums[mk] += float(mv)
                     e.metric_counts[mk] += 1
-            if k in counted:
-                continue  # one match counts once toward matches / wins / minutes
-            counted.add(k)
-            score = _seat_score(s, seat)
-            e.matches += 1
-            e.wins += score or 0.0
-            e.verified += 1 if s.verified else 0
-            e.game_minutes += s.game_minutes
-            st.wins += score or 0.0
-            st.matches += 1
             if lat.get("p50") is not None:
                 st.lat_p50.append((float(lat["p50"]), max(answered, 1)))
+            seat_scores.setdefault(k, []).append(_seat_score(s, seat) or 0.0)
+        # one match counts once toward matches / minutes; an entrant in several seats (two
+        # scripted snakes in one free-for-all) scores the mean of its seats, i.e. a per-seat
+        # win rate, so a mirror seat neither doubles nor erases a win
+        for k, scores in seat_scores.items():
+            e = entries[k]
+            score = sum(scores) / len(scores)
+            e.matches += 1
+            e.wins += score
+            e.verified += 1 if s.verified else 0
+            e.game_minutes += s.game_minutes
+            st = e.suites[s.suite]
+            st.wins += score
+            st.matches += 1
     for game, entries in by_game.items():
         table = rate([s for s in samples if s.game == game], key=entry_key)
         for k, e in entries.items():
