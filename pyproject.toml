@@ -13,6 +13,13 @@ dependencies = [
     "openskill>=6.0",
 ]
 
+[project.optional-dependencies]
+# The pinned tempo: engine + server + client, and the baseline agents. One SHA, bumped with
+# scripts/bump-tempo.sh. Kept optional so tests (fake server) run without building Rust.
+tempo = [
+    "tempo-arena @ git+https://github.com/tempoarena/tempo@6c765716af15910efbd892da4b2c25d4d571030e",
+]
+
 [project.scripts]
 tempo-eval = "tempo_eval.cli:main"
 
