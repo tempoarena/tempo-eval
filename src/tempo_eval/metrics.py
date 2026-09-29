@@ -10,10 +10,16 @@ the pooled values would need every match's `latency.jsonl`.
 
 Two latencies, because real-time agents have two loops. `latency_ms` is what the server measures
 per answer (observation sent -> pad received): an agent that drives its pad every tick through
-skills while a model thinks beside it answers in well under a millisecond. `think_ms_mean` is
-the agent's own model-call latency (`usage.latency_ms_total / usage.calls`), which is how long
-its decisions take to form. The frontier plots `decision_latency_ms`: think time when the entry
-calls a model, answer latency otherwise.
+skills while a model thinks beside it answers in well under a millisecond. How long its
+decisions take to form is the think time, from two sources, most faithful first:
+
+1. the engine's charge: agents declare model calls as `think` messages and the server records
+   per seat `thinks` and `think_ticks` (tempo ARCHITECTURE §5) -> `think_ticks * tick_ms /
+   thinks`. This is what the charged clock actually made the world pay.
+2. the agent's own report: `usage.latency_ms_total / usage.calls`.
+
+`decision_latency_ms` (the frontier's axis) is the first available of: engine think, reported
+think, answer latency.
 """
 
 from __future__ import annotations
@@ -66,10 +72,16 @@ class SuiteStats:
     lat_p50: list = field(default_factory=list)
     think_ms_total: float = 0.0
     calls: int = 0
+    charged_think_ms: float = 0.0
+    thinks: int = 0
 
     @property
     def decision_latency_ms(self) -> float | None:
-        return self.think_ms_total / self.calls if self.calls else weighted_median(self.lat_p50)
+        if self.thinks:
+            return self.charged_think_ms / self.thinks
+        if self.calls:
+            return self.think_ms_total / self.calls
+        return weighted_median(self.lat_p50)
 
 
 @dataclass
@@ -96,16 +108,27 @@ class Entry:
     metric_counts: dict = field(default_factory=lambda: defaultdict(int))
     think_ms_total: float = 0.0
     calls: int = 0
+    charged_think_ms: float = 0.0
+    thinks: int = 0
     suites: dict = field(default_factory=dict)  # suite -> SuiteStats
     rating: Rating | None = None
 
     @property
     def think_ms_mean(self) -> float | None:
+        """Agent-reported model-call latency."""
         return self.think_ms_total / self.calls if self.calls else None
 
     @property
+    def charged_think_ms_mean(self) -> float | None:
+        """Mean think as the engine charged it (think_ticks converted at the tick rate)."""
+        return self.charged_think_ms / self.thinks if self.thinks else None
+
+    @property
     def decision_latency_ms(self) -> float | None:
-        return self.think_ms_mean if self.calls else self.latency_p50
+        for v in (self.charged_think_ms_mean, self.think_ms_mean):
+            if v is not None:
+                return v
+        return self.latency_p50
 
     @property
     def win_rate(self) -> float:
@@ -177,9 +200,15 @@ def build_entries(samples: list[Sample]) -> dict[str, dict[str, Entry]]:
             think, calls = float(usage.get("latency_ms_total") or 0.0), int(usage.get("calls") or 0)
             e.think_ms_total += think
             e.calls += calls
+            thinks = int(stats.get("thinks") or 0)
+            charged = float(stats.get("think_ticks") or 0) * 1000.0 / s.tick_hz
+            e.thinks += thinks
+            e.charged_think_ms += charged
             st = e.suites.setdefault(s.suite, SuiteStats())
             st.think_ms_total += think
             st.calls += calls
+            st.thinks += thinks
+            st.charged_think_ms += charged
             for mk, mv in s.seat_outcome(seat.index).items():
                 if mk in NOT_METRICS:
                     continue

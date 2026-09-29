@@ -149,6 +149,8 @@ class FakeServer:
                         "calls": 0 if bot else 10,
                         "latency_ms_total": 0.0 if bot else 9_000.0,
                     },
+                    "thinks": 0 if bot else 10,
+                    "think_ticks": 0 if bot else 320,
                 }
             )
         return {

@@ -78,10 +78,12 @@ def test_run_publish_end_to_end(tmp_path, fake_server, fake_agent):
     assert [r["name"] for r in rows] == ["bot:scripted", "llm", "rnd"]
     assert by_name["bot:scripted"]["win_rate"] == 1.0
     assert by_name["llm"]["latency_ms_p50"] == 800.0
-    # it answers every tick, but its decisions take the model's 900 ms to form
+    # it answers every tick, but its decisions take ~1 s to form: the agent reports 900 ms per
+    # model call, and the engine charged 32 ticks (1000 ms) per think, which is what counts
     assert by_name["llm"]["think_ms_mean"] == 900.0
-    assert by_name["llm"]["decision_latency_ms"] == 900.0
-    assert by_name["llm"]["frontier"][0]["decision_latency_ms"] == 900.0
+    assert by_name["llm"]["charged_think_ms_mean"] == 1000.0
+    assert by_name["llm"]["decision_latency_ms"] == 1000.0
+    assert by_name["llm"]["frontier"][0]["decision_latency_ms"] == 1000.0
     # $0.05 per match-minute for the llm seat
     assert abs(by_name["llm"]["cost_per_min_usd"] - 0.05) < 1e-9
     assert by_name["bot:scripted"]["cost_per_min_usd"] == 0.0

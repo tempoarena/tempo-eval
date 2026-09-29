@@ -66,6 +66,8 @@ def _entry_json(e: Entry) -> dict:
         "latency_ms_p50": _r(e.latency_p50, 2),
         "latency_ms_p95": _r(e.latency_p95, 2),
         "think_ms_mean": _r(e.think_ms_mean, 2),
+        "charged_think_ms_mean": _r(e.charged_think_ms_mean, 2),
+        "thinks": e.thinks,
         "decision_latency_ms": _r(e.decision_latency_ms, 2),
         "model_calls": e.calls,
         "missed_deadline_rate": _r(e.missed / total) if total else None,

@@ -54,10 +54,13 @@ class Sample:
         return per[i] if i < len(per) and isinstance(per[i], dict) else {}
 
     @property
-    def game_minutes(self) -> float:
+    def tick_hz(self) -> float:
         hz = self.result.get("tick_hz") or (self.result.get("config") or {}).get("tick_hz") or 32
-        ticks = self.result.get("ticks") or 0
-        return ticks / float(hz) / 60.0
+        return float(hz)
+
+    @property
+    def game_minutes(self) -> float:
+        return (self.result.get("ticks") or 0) / self.tick_hz / 60.0
 
 
 @dataclass
@@ -115,9 +118,14 @@ def load_results(
                 continue
             result = json.loads(rpath.read_text())
             seats = []
+            rseats = result.get("seats") or []
             for i, e in enumerate(rec["seats"]):
-                kind = e["kind"]
-                agent = f"bot:{e['bot']}" if kind == "bot" else (e.get("agent") or kind)
+                # identity (entrant name, class, model) is the evaluator's own record; the seat
+                # kind is the server's (`bot` only for in-server bots, else what the client
+                # declared in hello)
+                rs = rseats[i] if i < len(rseats) and isinstance(rseats[i], dict) else {}
+                kind = rs.get("kind") or e["kind"]
+                agent = f"bot:{e['bot']}" if e["kind"] == "bot" else (e.get("agent") or kind)
                 seats.append(
                     Seat(
                         index=i,
