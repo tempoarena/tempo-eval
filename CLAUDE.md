@@ -75,10 +75,10 @@ published/     committed outputs of `publish` (small, safe)
 - A result counts only if its replay verifies (or, without `--require-verified`, cannot be
   checked). Never "fix" a failing verification by skipping it; report it.
 - Retry a failed match with the **same** seed. Never substitute seeds: it biases results.
-- Bot-only leaderboard suites use `clock: charged` (G8). Suites with model agents use
-  `wallclock` for now: tempo's charged clock charges pad-answer latency, not think time, and the
-  baselines answer pads every tick while thinking beside them (see the note in
-  `suites/snake-models.yaml`). Switch back once tempo charges think time.
+- Leaderboard suites use `clock: charged` (G8). Model agents must declare model calls as
+  `think`s (tempo protocol) or charged mode lets the sim race past their thinking.
+- Decision latency (frontier axis) prefers the engine's charged think (`think_ticks`/`thinks`),
+  then the agent's reported model-call latency, then answer latency.
 - Two-team lineups are written as team blocks; the runner interleaves them to tempo's seat rule
   (seat i -> team i % 2). `play` seats literally and prints each seat's team.
 - A match where any agent process exits non-zero is `agent_error`, never a result.
