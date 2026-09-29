@@ -14,7 +14,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from .metrics import Entry, build_entries, weighted_median, wilson
-from .pareto import frontier, hypervolume, normalise
+from .pareto import LAT_MIN_MS, frontier, hypervolume
 from .results import Loaded
 
 #: where tempo-site reads the leaderboard from (agreed with the site team)
@@ -81,19 +81,25 @@ def build_leaderboard(loaded: Loaded) -> dict:
             (_entry_json(e) for e in entries.values()),
             key=lambda r: (r["rating_conservative"] is None, -(r["rating_conservative"] or 0.0)),
         )
-        # game-level frontier over entries with a latency figure, capability = rating
-        pts = [
-            (r["latency_ms_p50"], r["rating"])
+        # game-level frontier over entries with a rating, capability = rating. Built-in bots
+        # answer inside the server's tick and report no latency; they sit at the fast edge
+        # (LAT_MIN_MS) rather than being left off the frontier they define.
+        on_front = [
+            r
             for r in rows
-            if r["latency_ms_p50"] is not None and r["rating"] is not None
+            if r["rating"] is not None and (r["latency_ms_p50"] is not None or r["kind"] == "bot")
         ]
-        named = [
-            r["name"] for r in rows if r["latency_ms_p50"] is not None and r["rating"] is not None
+        pts = [
+            (r["latency_ms_p50"] if r["latency_ms_p50"] is not None else LAT_MIN_MS, r["rating"])
+            for r in on_front
         ]
-        caps = normalise([p[1] for p in pts])
+        named = [r["name"] for r in on_front]
         front = [named[i] for i in frontier(pts)]
         samples = [s for s in loaded.samples if s.game == game]
-        hv = hypervolume([(p[0], c) for p, c in zip(pts, caps, strict=True)]) if pts else None
+        # hypervolume of the frontier in (speed, win rate): a rating normalised within the game
+        # would give the best entry capability 1.0 by construction and say nothing
+        wins = [r["win_rate"] for r in on_front]
+        hv = hypervolume([(pts[i][0], wins[i]) for i in frontier(pts)]) if pts else None
         games[game] = {
             "entries": rows,
             "frontier": front,
