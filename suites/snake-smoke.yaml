@@ -1,14 +1,12 @@
 # The cheapest end-to-end check: two built-in/baseline policies, no model calls.
 name: snake-smoke
 game: snake
-description: Scripted bot vs random agent, 1v1, short rounds. Exercises server, agent launch, results.
+description: Scripted bot vs random bot, 1v1, short rounds. Needs only the server, no agents.
 config: {rounds: 1, round_seconds: 30}
 clock: lockstep
 obs_mode: state
 seeds: {set: dev, count: 2}
 lineups:
-  - [bot:scripted, random]
+  - [bot:scripted, bot:random]
 rotation: cyclic
-entrants:
-  random: {kind: agent, agent: random}
 limits: {match_timeout_s: 180, concurrency: 2, retries: 1}

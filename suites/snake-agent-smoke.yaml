@@ -1,0 +1,14 @@
+# Like snake-smoke, but the random policy runs as a tempo-agent process over WebSocket:
+# checks the agent launch path, the seat protocol and usage reporting, still without model calls.
+name: snake-agent-smoke
+game: snake
+config: {rounds: 1, round_seconds: 30}
+clock: lockstep
+obs_mode: state
+seeds: {set: dev, count: 2}
+lineups:
+  - [bot:scripted, random]
+rotation: cyclic
+entrants:
+  random: {kind: agent, agent: random}
+limits: {match_timeout_s: 180, concurrency: 2, retries: 1}
