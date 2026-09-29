@@ -70,3 +70,12 @@ def test_every_shipped_suite_parses():
     assert paths
     for p in paths:
         load_suite(p)
+
+
+def test_two_team_lineups_follow_the_servers_seat_rule():
+    from tempo_eval.runner import seat_order
+
+    two = {"teams": "two"}
+    assert seat_order(["a1", "a2", "b1", "b2"], two) == ["a1", "b1", "a2", "b2"]
+    assert seat_order(["a", "b", "c"], {"teams": "ffa_or_teams"}) == ["a", "b", "c"]
+    assert seat_order(["a", "b"], None) == ["a", "b"]

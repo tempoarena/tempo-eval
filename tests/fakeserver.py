@@ -56,7 +56,12 @@ class FakeServer:
                 if p[0] == "games" and len(p) == 2:
                     return self._send(
                         200,
-                        {"id": p[1], "tick_hz": 32, "seats": {"min": 1, "max": 10, "default": 4}},
+                        {
+                            "id": p[1],
+                            "tick_hz": 32,
+                            "teams": "two" if srv.two_teams else "ffa_or_teams",
+                            "seats": {"min": 1, "max": 10, "default": 4},
+                        },
                     )
                 if p[0] == "matches" and len(p) >= 2 and p[1] in srv.matches:
                     m = srv.status(p[1])
@@ -91,7 +96,7 @@ class FakeServer:
         self.httpd.shutdown()
 
     def team_of(self, i: int, n: int) -> int:
-        return (0 if i < n // 2 else 1) if self.two_teams else i
+        return i % 2 if self.two_teams else i  # tempo's rule for two-team games
 
     def create(self, cfg: dict) -> dict:
         with self._lock:

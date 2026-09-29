@@ -10,7 +10,7 @@ from pathlib import Path
 from .dotenv import load_dotenv
 from .publish import build_leaderboard, write_outputs
 from .results import load_results
-from .runner import Runner, plan_jobs
+from .runner import Runner, local_game_spec, plan_jobs
 from .suite import load_suite
 
 
@@ -30,7 +30,7 @@ def cmd_run(a: argparse.Namespace) -> int:
     for path in a.suites:
         suite = load_suite(path)
         if a.dry_run:
-            for j in plan_jobs(suite):
+            for j in plan_jobs(suite, local_game_spec(suite.game)):
                 print(f"{j.index:3d} seed={j.seed} seats={[e.name for e in j.seats]}")
             continue
         summary = Runner(suite, Path(a.out)).run(server_url=a.server)

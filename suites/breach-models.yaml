@@ -2,7 +2,7 @@
 name: breach-models
 game: breach
 description: LLM+skills, Jev and hybrid agents vs the scripted bot, 1v1, both sides.
-config: {team_size: 1, rounds_to_win: 2, max_rounds: 2, round_seconds: 45, buy_seconds: 5}
+config: {rounds_to_win: 2, max_rounds: 2, round_seconds: 45, buy_seconds: 5}
 clock: charged
 obs_mode: state
 seeds: {set: dev, count: 1}

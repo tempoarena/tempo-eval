@@ -54,13 +54,41 @@ class MatchRecord:
     wall_s: float = 0.0
 
 
-def plan_jobs(suite: Suite) -> list[Job]:
+def seat_order(lineup: list[str], game_spec: dict | None) -> list[str]:
+    """Map a written lineup onto the server's seat -> team rule.
+
+    Two-team lineups are written as team blocks (first half one team, second half the other),
+    which is how people think about them. tempo assigns two-team seats alternately
+    (spec/games/breach.json `seat_teams`: "seat i plays for team i % 2"), so the blocks are
+    interleaved: [a0, b0, a1, b1, ...]. Free-for-all lineups are used as written.
+    """
+    if not game_spec or game_spec.get("teams") != "two" or len(lineup) % 2:
+        return list(lineup)
+    half = len(lineup) // 2
+    out: list[str] = []
+    for a, b in zip(lineup[:half], lineup[half:], strict=True):
+        out += [a, b]
+    return out
+
+
+def local_game_spec(game: str) -> dict | None:
+    """The game spec from the installed tempo, for planning without a server (dry runs)."""
+    try:
+        import tempo  # type: ignore[import-not-found]
+
+        spec = tempo.spec(game)
+    except Exception:
+        return None
+    return spec if isinstance(spec, dict) else None
+
+
+def plan_jobs(suite: Suite, game_spec: dict | None = None) -> list[Job]:
     jobs: list[Job] = []
     for seed in suite.seed_list():
         for lineup in suite.lineups:
             for seating in rotations(lineup, suite.rotation):
                 for rep in range(suite.matches_per_seed):
-                    ents = [suite.entrant(ref) for ref in seating]
+                    ents = [suite.entrant(ref) for ref in seat_order(seating, game_spec)]
                     jobs.append(Job(index=len(jobs), seed=seed, seats=ents, repeat=rep))
     return jobs
 
@@ -108,14 +136,14 @@ class Runner:
 
     def run(self, server_url: str | None = None, log=print) -> dict:
         self.run_dir.mkdir(parents=True, exist_ok=True)
-        jobs = plan_jobs(self.suite)
-        if any(e.kind == "human" for j in jobs for e in j.seats):
+        if any(self.suite.entrant(r).kind == "human" for lu in self.suite.lineups for r in lu):
             raise ValueError("suites cannot seat humans; use `tempo-eval play`")
         started = time.time()
         with connect_or_start(
             server_url, self.run_dir / "server-runs", log_path=self.run_dir / "server.log"
         ) as client:
             health = client.health()
+            jobs = plan_jobs(self.suite, client.game(self.suite.game))
             log(
                 f"[{self.suite.name}] {len(jobs)} matches on {client.base_url} "
                 f"(tempo {health.get('version')} {health.get('git_sha', '')[:12]})"
