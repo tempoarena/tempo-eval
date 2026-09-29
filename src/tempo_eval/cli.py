@@ -76,6 +76,8 @@ def cmd_play(a: argparse.Namespace) -> int:
 
 
 def main(argv: list[str] | None = None) -> int:
+    # progress lines (join URLs above all) must appear immediately even when piped to a file
+    sys.stdout.reconfigure(line_buffering=True)  # type: ignore[union-attr]
     load_dotenv()
     p = argparse.ArgumentParser(prog="tempo-eval", description=__doc__)
     sub = p.add_subparsers(dest="cmd", required=True)
