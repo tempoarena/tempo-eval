@@ -158,3 +158,16 @@ def test_suite_cost_cap_stops_new_matches(tmp_path, fake_server, fake_agent):
     # every match costs $0.10 (two agent seats at $0.05); the third match crosses the cap
     assert summary["counts"]["finished"] == 3
     assert summary["counts"]["skipped"] == 9
+
+
+def test_a_crashed_agent_invalidates_the_match(tmp_path, fake_server, monkeypatch):
+    import sys
+
+    monkeypatch.setenv("TEMPO_AGENT_CMD", f"{sys.executable} -c 'import sys; sys.exit(3)'")
+    suite = snake_suite(
+        seeds={"set": "dev", "count": 1}, limits={"match_timeout_s": 20, "retries": 1}
+    )
+    summary = Runner(suite, tmp_path / "r", poll_s=0.05).run(server_url=fake_server.url)
+    assert set(summary["counts"]) == {"agent_error"}
+    assert all(m["attempts"] == 2 for m in summary["matches"])
+    assert load_results(tmp_path / "r").samples == []

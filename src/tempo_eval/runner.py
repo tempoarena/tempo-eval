@@ -43,7 +43,7 @@ class MatchRecord:
     job: int
     seed: int
     seats: list[dict]
-    status: str = "pending"  # finished | aborted | timeout | error | skipped
+    status: str = "pending"  # finished | aborted | timeout | agent_error | error | skipped
     match_id: str | None = None
     attempts: int = 0
     error: str | None = None
@@ -250,6 +250,12 @@ class Runner:
                 str(k): v
                 for k, v in procs.stop(grace_s=10.0 if status == "finished" else 0.5).items()
             }
+        failed = {k: v for k, v in rec.agent_exit_codes.items() if v not in (0, None)}
+        if status == "finished" and failed:
+            # the match ran to the end, but an entrant's process died partway: its seat idled,
+            # so the result measures a crash, not the agent. Never count it; retry instead.
+            status = "agent_error"
+            rec.error = f"agent(s) exited non-zero: {failed} (see seat<N>.log)"
         rec.status = status
         if status != "finished":
             rec.error = rec.error or f"match {status}"
