@@ -2,7 +2,7 @@
 name: breach-bots
 game: breach
 description: Scripted bots vs random agents, 5v5, short match.
-config: {rounds_to_win: 3, max_rounds: 4, round_seconds: 60, buy_seconds: 5}
+config: {map: meridian, rounds_to_win: 3, max_rounds: 4, round_seconds: 60, freeze_seconds: 5, warmup_seconds: 0, max_overtimes: 1}
 clock: charged
 obs_mode: state
 seeds: {set: dev, count: 4}

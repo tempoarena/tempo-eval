@@ -1,7 +1,8 @@
 # Official numbers: held-out maps (seeds from the private $TEMPO_HELDOUT_SEEDS file, G9).
 name: breach-heldout
 game: breach
-config: {rounds_to_win: 7, max_rounds: 12}
+# procedural maps (the default) on purpose: held-out content must be unseen, never the flagship map (G9)
+config: {rounds_to_win: 7, max_rounds: 12, warmup_seconds: 0, max_overtimes: 1}
 clock: charged
 obs_mode: state
 seeds: {set: heldout, count: 8}

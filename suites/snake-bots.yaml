@@ -2,7 +2,7 @@
 name: snake-bots
 game: snake
 description: 4-snake free-for-all among scripted bots and the random agent.
-config: {rounds: 3, round_seconds: 60}
+config: {countdown_seconds: 0, ticks_per_move: 4, rounds: 3, round_seconds: 60}
 clock: charged
 obs_mode: state
 seeds: {set: dev, count: 8}

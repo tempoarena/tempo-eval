@@ -2,7 +2,7 @@
 name: breach-models
 game: breach
 description: LLM and LLM+skills (Jev and hybrid when keyed) vs the scripted bot, 1v1, both sides.
-config: {rounds_to_win: 2, max_rounds: 2, round_seconds: 45, buy_seconds: 5}
+config: {map: meridian, rounds_to_win: 2, max_rounds: 2, round_seconds: 45, freeze_seconds: 5, warmup_seconds: 0, max_overtimes: 1}
 # charged: agents declare each model call as a `think`, and while one is open the sim runs no
 # faster than real time (tempo ARCHITECTURE §5), so think time is what the world charges.
 clock: charged

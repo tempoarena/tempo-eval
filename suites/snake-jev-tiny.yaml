@@ -1,7 +1,7 @@
 # One short match, one Jev seat. Needs TYPESAFE_API_KEY in .env.
 name: snake-jev-tiny
 game: snake
-config: {rounds: 1, round_seconds: 20}
+config: {countdown_seconds: 0, ticks_per_move: 4, rounds: 1, round_seconds: 20}
 clock: wallclock
 obs_mode: state
 seeds: {set: dev, count: 1}

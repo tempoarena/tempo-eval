@@ -79,3 +79,16 @@ def test_two_team_lineups_follow_the_servers_seat_rule():
     assert seat_order(["a1", "a2", "b1", "b2"], two) == ["a1", "b1", "a2", "b2"]
     assert seat_order(["a", "b", "c"], {"teams": "ffa_or_teams"}) == ["a", "b", "c"]
     assert seat_order(["a", "b"], None) == ["a", "b"]
+
+
+def test_suite_configs_use_only_keys_the_pinned_game_accepts():
+    """The registry rejects unknown config keys; catch a renamed key here, not mid-run."""
+    from pathlib import Path
+
+    tempo = pytest.importorskip("tempo")
+    from tempo_eval.suite import load_suite
+
+    for p in sorted(Path(__file__).parent.parent.glob("suites/*.yaml")):
+        s = load_suite(p)
+        allowed = set(tempo.spec(s.game)["config_defaults"])
+        assert set(s.config) <= allowed, f"{p.name}: unknown keys {set(s.config) - allowed}"

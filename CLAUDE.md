@@ -82,6 +82,10 @@ published/     committed outputs of `publish` (small, safe)
 - Two-team lineups are written as team blocks; the runner interleaves them to tempo's seat rule
   (seat i -> team i % 2). `play` seats literally and prints each seat's team.
 - A match where any agent process exits non-zero is `agent_error`, never a result.
+- Only **approved** games are ranked (tempo `docs/GAME_LIFECYCLE.md`). The runner records the
+  game's `status` in run.json; `publish` drops prototype/unknown games even with `--all`.
+  Prototypes get `suites/proto-<game>.yaml` smoke tests (scripted bots, 2 matches).
+- Suite `config` keys must exist in the pinned game's `config_defaults` (a test checks it).
 - Model suites stay tiny and carry `cost_cap_usd` / `suite_cost_cap_usd`.
 - Publishing is allow-list only: add a field to `publish._entry_json` deliberately, never dump
   result objects wholesale.

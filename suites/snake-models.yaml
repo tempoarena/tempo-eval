@@ -2,7 +2,7 @@
 name: snake-models
 game: snake
 description: LLM (GPT-5.6 luna on Bedrock), LLM+skills, Jev and hybrid agents against the scripted bot.
-config: {rounds: 1, round_seconds: 45}
+config: {countdown_seconds: 0, ticks_per_move: 4, rounds: 1, round_seconds: 45}
 # charged: agents declare each model call as a `think`, and while one is open the sim runs no
 # faster than real time (tempo ARCHITECTURE §5), so think time is what the world charges.
 clock: charged
