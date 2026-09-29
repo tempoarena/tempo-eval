@@ -1,0 +1,14 @@
+# Prototype smoke test (tempo docs/GAME_LIFECYCLE.md): two short all-bot matches that prove the
+# game runs end to end through the server, the engine and replay verification. Prototype games
+# are never published as rankings; `publish` skips any game whose spec status is not approved.
+name: proto-tidefall
+game: tidefall
+description: Smoke test of the tidefall prototype, scripted bots only.
+config: {minutes: 1, countdown_s: 0}
+clock: charged
+obs_mode: state
+seeds: {set: dev, count: 2}
+lineups:
+  - [bot:scripted, bot:scripted]
+rotation: none
+limits: {match_timeout_s: 300, concurrency: 2, retries: 0}

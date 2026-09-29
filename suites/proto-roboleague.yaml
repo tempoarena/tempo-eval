@@ -1,0 +1,14 @@
+# Prototype smoke test (tempo docs/GAME_LIFECYCLE.md): two short all-bot matches that prove the
+# game runs end to end through the server, the engine and replay verification. Prototype games
+# are never published as rankings; `publish` skips any game whose spec status is not approved.
+name: proto-roboleague
+game: roboleague
+description: Smoke test of the roboleague prototype, scripted bots only.
+config: {half_seconds: 30, countdown_seconds: 0, halftime_seconds: 1}
+clock: charged
+obs_mode: state
+seeds: {set: dev, count: 2}
+lineups:
+  - [bot:scripted, bot:scripted]
+rotation: none
+limits: {match_timeout_s: 300, concurrency: 2, retries: 0}
