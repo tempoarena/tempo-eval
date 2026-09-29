@@ -37,10 +37,11 @@ uv sync                                   # env without tempo (tests use a fake 
 uv sync --extra tempo                     # + the pinned tempo-arena and tempo-baselines
 scripts/dev-link.sh [../tempo]            # use a local tempo checkout instead (then uv run --no-sync)
 scripts/bump-tempo.sh [<sha>]             # move the pin (default tempo origin/main)
+scripts/build-server.sh                   # tempo-server at the pin -> .tools/ (fallback server)
 uv run pytest -q                          # all tests;  uv run pytest tests/test_pipeline.py -k cost
 uv run ruff check . && uv run ruff format .
 
-uv run tempo-eval run suites/snake-smoke.yaml [--server http://127.0.0.1:8765] [--dry-run]
+uv run --extra tempo tempo-eval run suites/snake-smoke.yaml [--server http://127.0.0.1:8765] [--dry-run]
 uv run tempo-eval publish --site ../tempo-site         # leaderboard suites only; --all for every suite
 uv run tempo-eval play --game breach --human 1 --vs llm,jev,bot:scripted
 ```
@@ -74,7 +75,13 @@ published/     committed outputs of `publish` (small, safe)
 - A result counts only if its replay verifies (or, without `--require-verified`, cannot be
   checked). Never "fix" a failing verification by skipping it; report it.
 - Retry a failed match with the **same** seed. Never substitute seeds: it biases results.
-- Leaderboard suites use `clock: charged` so latency results hold across hardware (G8).
+- Bot-only leaderboard suites use `clock: charged` (G8). Suites with model agents use
+  `wallclock` for now: tempo's charged clock charges pad-answer latency, not think time, and the
+  baselines answer pads every tick while thinking beside them (see the note in
+  `suites/snake-models.yaml`). Switch back once tempo charges think time.
+- Two-team lineups are written as team blocks; the runner interleaves them to tempo's seat rule
+  (seat i -> team i % 2). `play` seats literally and prints each seat's team.
+- A match where any agent process exits non-zero is `agent_error`, never a result.
 - Model suites stay tiny and carry `cost_cap_usd` / `suite_cost_cap_usd`.
 - Publishing is allow-list only: add a field to `publish._entry_json` deliberately, never dump
   result objects wholesale.
