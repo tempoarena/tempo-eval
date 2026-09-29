@@ -1,0 +1,28 @@
+# Python / uv
+__pycache__/
+.venv/
+.pytest_cache/
+.ruff_cache/
+dist/
+*.egg-info/
+
+# Secrets: never commit. Only .env.example (names, no values) is tracked.
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+credentials*
+# Held-out seeds are private by design (G9). Point TEMPO_HELDOUT_SEEDS at a file outside git.
+heldout*.yaml
+heldout*.json
+heldout*.txt
+
+# Raw match output: replays, latency logs, agent stderr (may hold full prompts)
+/results/
+/runs/
+
+.DS_Store
+.idea/
+.vscode/
+.claude/
