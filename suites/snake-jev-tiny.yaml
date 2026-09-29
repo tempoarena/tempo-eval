@@ -1,0 +1,13 @@
+# One short match, one Jev seat. Needs TYPESAFE_API_KEY in .env.
+name: snake-jev-tiny
+game: snake
+config: {rounds: 1, round_seconds: 20}
+clock: wallclock
+obs_mode: state
+seeds: {set: dev, count: 1}
+lineups:
+  - [jev, bot:scripted]
+rotation: none
+entrants:
+  jev: {kind: agent, agent: jev, model: jev-latest}
+limits: {match_timeout_s: 120, concurrency: 1, retries: 0, cost_cap_usd: 0.1, suite_cost_cap_usd: 0.1}

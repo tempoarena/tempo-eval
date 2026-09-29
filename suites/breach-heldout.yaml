@@ -1,0 +1,15 @@
+# Official numbers: held-out maps (seeds from the private $TEMPO_HELDOUT_SEEDS file, G9).
+name: breach-heldout
+game: breach
+config: {team_size: 5, rounds_to_win: 7, max_rounds: 12}
+clock: charged
+obs_mode: state
+seeds: {set: heldout, count: 8}
+lineups:
+  - [bot:scripted, bot:scripted, bot:scripted, bot:scripted, bot:scripted,
+     random, random, random, random, random]
+rotation: swap
+entrants:
+  random: {kind: agent, agent: random}
+limits: {match_timeout_s: 2400, concurrency: 2, retries: 1}
+leaderboard: true

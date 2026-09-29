@@ -1,0 +1,21 @@
+# Models under real time pressure. Small on purpose: every LLM decision costs money.
+name: snake-models
+game: snake
+description: LLM (GPT-5.6 luna on Bedrock), LLM+skills, Jev and hybrid agents against the scripted bot.
+config: {rounds: 1, round_seconds: 45}
+clock: charged
+obs_mode: state
+seeds: {set: dev, count: 2}
+lineups:
+  - [llm, bot:scripted]
+  - [llm-skills, bot:scripted]
+  - [jev, bot:scripted]
+  - [hybrid, bot:scripted]
+rotation: none
+entrants:
+  llm: {kind: agent, agent: llm, model: bedrock_mantle/openai.gpt-5.6-luna}
+  llm-skills: {kind: agent, agent: llm-skills, model: bedrock_mantle/openai.gpt-5.6-luna}
+  jev: {kind: agent, agent: jev, model: jev-latest}
+  hybrid: {kind: agent, agent: hybrid, model: bedrock_mantle/openai.gpt-5.6-luna}
+limits: {match_timeout_s: 300, concurrency: 2, retries: 0, cost_cap_usd: 0.5, suite_cost_cap_usd: 3.0}
+leaderboard: true

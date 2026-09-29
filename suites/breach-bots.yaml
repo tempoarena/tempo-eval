@@ -1,0 +1,16 @@
+# Breach 5v5 among model-free baselines. `swap` puts each side on attack and defence.
+name: breach-bots
+game: breach
+description: Scripted bots vs random agents, 5v5, short match.
+config: {team_size: 5, rounds_to_win: 3, max_rounds: 4, round_seconds: 60, buy_seconds: 5}
+clock: charged
+obs_mode: state
+seeds: {set: dev, count: 4}
+lineups:
+  - [bot:scripted, bot:scripted, bot:scripted, bot:scripted, bot:scripted,
+     random, random, random, random, random]
+rotation: swap
+entrants:
+  random: {kind: agent, agent: random}
+limits: {match_timeout_s: 1200, concurrency: 2, retries: 1}
+leaderboard: true
