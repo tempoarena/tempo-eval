@@ -57,6 +57,9 @@ class Entrant(BaseModel):
     #: tempo-baselines agent for `kind: agent` (`random`, `llm`, `llm-skills`, `jev`, `hybrid`)
     agent: str | None = None
     model: str | None = None
+    #: TypeSafe model for agents that use Jev beside an LLM (`hybrid`); for `agent: jev` the
+    #: Jev model is simply `model`
+    jev_model: str | None = None
     #: leaderboard class: `open` (any model/compute) or `fixed-model`
     klass: str = Field(default="open", alias="class")
     #: overrides the suite's obs_mode for this entrant

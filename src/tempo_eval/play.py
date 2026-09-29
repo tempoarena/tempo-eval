@@ -83,7 +83,7 @@ def play(
             if e.kind == "agent":
                 procs.launch(
                     i,
-                    agent_argv(e, client.ws_url, mid, i, obs_mode),
+                    agent_argv(e, client.ws_url, mid, i, obs_mode, seed=seed),
                     run_dir / mid / f"seat{i}.log",
                     None,
                 )

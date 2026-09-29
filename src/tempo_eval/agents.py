@@ -31,8 +31,18 @@ def agent_argv(
     match_id: str,
     seat: int,
     obs_mode: str,
+    *,
+    seed: int | None = None,
+    cost_cap_usd: float | None = None,
+    summary_path: Path | None = None,
     launcher: list[str] | None = None,
 ) -> list[str]:
+    """The `tempo-agent` command line for one seat (tempo baselines/src/tempo_baselines/cli.py).
+
+    `model` goes to `--model` (litellm id) except for the `jev` agent, whose model is the
+    TypeSafe one (`--jev-model`). The match seed is passed so a stochastic agent's own choices
+    are reproducible along with the match.
+    """
     argv = [
         *(launcher or agent_launcher()),
         "--agent",
@@ -49,7 +59,15 @@ def agent_argv(
         ent.name,
     ]
     if ent.model:
-        argv += ["--model", ent.model]
+        argv += ["--jev-model" if ent.agent == "jev" else "--model", ent.model]
+    if ent.jev_model:
+        argv += ["--jev-model", ent.jev_model]
+    if seed is not None:
+        argv += ["--seed", str(seed)]
+    if cost_cap_usd is not None:
+        argv += ["--max-cost-usd", str(cost_cap_usd)]
+    if summary_path is not None:
+        argv += ["--summary", str(summary_path)]
     return argv + list(ent.args)
 
 

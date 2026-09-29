@@ -60,6 +60,8 @@ def test_run_publish_end_to_end(tmp_path, fake_server, fake_agent):
         assert flag in argv
     assert argv[argv.index("--url") + 1].startswith("ws://127.0.0.1:")
     assert {launch["cap"] for launch in launches} == {"0.5"}
+    assert argv[argv.index("--max-cost-usd") + 1] == "0.5"
+    assert "--seed" in argv and "--summary" in argv
     llm = [la["argv"] for la in launches if "llm" in la["argv"]]
     assert all("bedrock_mantle/openai.gpt-5.6-luna" in a for a in llm)
 

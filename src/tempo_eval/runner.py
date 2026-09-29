@@ -178,7 +178,16 @@ class Runner:
         procs = AgentProcs()
         for seat, ent in enumerate(job.seats):
             if ent.kind == "agent":
-                argv = agent_argv(ent, client.ws_url, mid, seat, self.suite.obs_mode)
+                argv = agent_argv(
+                    ent,
+                    client.ws_url,
+                    mid,
+                    seat,
+                    self.suite.obs_mode,
+                    seed=job.seed,
+                    cost_cap_usd=self.suite.limits.cost_cap_usd,
+                    summary_path=mdir / f"seat{seat}.summary.json",
+                )
                 procs.launch(
                     seat,
                     argv,
