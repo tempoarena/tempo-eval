@@ -173,3 +173,14 @@ def test_a_crashed_agent_invalidates_the_match(tmp_path, fake_server, monkeypatc
     assert set(summary["counts"]) == {"agent_error"}
     assert all(m["attempts"] == 2 for m in summary["matches"])
     assert load_results(tmp_path / "r").samples == []
+
+
+def test_prototype_games_run_but_are_never_ranked(tmp_path, fake_server, fake_agent):
+    base = snake_suite(seeds={"set": "dev", "count": 1})
+    proto = snake_suite(name="proto-tidefall", game="tidefall", seeds={"set": "dev", "count": 1})
+    Runner(base, tmp_path / "r", poll_s=0.05).run(server_url=fake_server.url)
+    summary = Runner(proto, tmp_path / "r", poll_s=0.05).run(server_url=fake_server.url)
+    assert summary["game_status"] == "prototype" and summary["counts"] == {"finished": 3}
+    board = build_leaderboard(load_results(tmp_path / "r"))
+    assert set(board["games"]) == {"snake"}
+    assert board["excluded_games"] == [{"game": "tidefall", "status": "prototype"}]

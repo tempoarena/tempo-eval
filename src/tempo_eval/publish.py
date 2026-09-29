@@ -81,7 +81,11 @@ def _entry_json(e: Entry) -> dict:
 
 
 def build_leaderboard(loaded: Loaded) -> dict:
-    by_game = build_entries(loaded.samples)
+    """Rankings for **approved** games only (tempo docs/GAME_LIFECYCLE.md). Prototype games, and
+    games whose status is unknown, may be run as smoke tests but are never ranked publicly."""
+    ranked = {g for g, st in loaded.game_status.items() if st == "approved"}
+    excluded = sorted({s.game for s in loaded.samples} - ranked)
+    by_game = build_entries([s for s in loaded.samples if s.game in ranked])
     games: dict[str, dict] = {}
     for game, entries in sorted(by_game.items()):
         rows = sorted(
@@ -124,6 +128,9 @@ def build_leaderboard(loaded: Loaded) -> dict:
         "tempo_git_shas": loaded.tempo_shas,
         "rating_scale": "1000 + 40*(mu-25), OpenSkill Plackett-Luce; sorted by rating - 3 sd",
         "rejected_matches": len(loaded.rejected),
+        "excluded_games": [
+            {"game": g, "status": loaded.game_status.get(g) or "unknown"} for g in excluded
+        ],
         "games": games,
     }
 

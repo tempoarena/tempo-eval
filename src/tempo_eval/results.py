@@ -68,6 +68,8 @@ class Loaded:
     samples: list[Sample]
     rejected: list[dict]
     tempo_shas: list[str]
+    #: game -> lifecycle status (`approved`, `prototype`, or None when unknown)
+    game_status: dict = field(default_factory=dict)
 
 
 def _seat_team(result: dict, i: int) -> int:
@@ -86,6 +88,7 @@ def load_results(
     samples: list[Sample] = []
     rejected: list[dict] = []
     shas: list[str] = []
+    game_status: dict[str, str | None] = {}
     for run_json in sorted(root.glob("*/*/run.json")):
         run = json.loads(run_json.read_text())
         suite = run["suite"]
@@ -93,6 +96,10 @@ def load_results(
             continue
         if leaderboard_only and not suite.get("leaderboard"):
             continue
+        status = run.get("game_status")
+        if status is None:  # runs recorded before tempo had a lifecycle: ask the pinned tempo
+            status = (_local_spec(suite["game"]) or {}).get("status")
+        game_status.setdefault(suite["game"], status)
         sha = (run.get("server") or {}).get("git_sha")
         if sha and sha not in shas:
             shas.append(sha)
@@ -154,4 +161,10 @@ def load_results(
                 )
             )
     samples.sort(key=lambda s: s.order)
-    return Loaded(samples=samples, rejected=rejected, tempo_shas=shas)
+    return Loaded(samples=samples, rejected=rejected, tempo_shas=shas, game_status=game_status)
+
+
+def _local_spec(game: str) -> dict | None:
+    from .runner import local_game_spec
+
+    return local_game_spec(game)

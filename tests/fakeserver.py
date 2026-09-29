@@ -24,6 +24,7 @@ class FakeServer:
     def __init__(self, play_s: float = 0.2, two_teams: bool = False):
         self.play_s = play_s
         self.two_teams = two_teams
+        self.prototypes: set[str] = {"tidefall"}
         self.matches: dict[str, dict] = {}
         self._n = 0
         self._lock = threading.Lock()
@@ -60,6 +61,7 @@ class FakeServer:
                             "id": p[1],
                             "tick_hz": 32,
                             "teams": "two" if srv.two_teams else "ffa_or_teams",
+                            "status": "prototype" if p[1] in srv.prototypes else "approved",
                             "seats": {"min": 1, "max": 10, "default": 4},
                         },
                     )

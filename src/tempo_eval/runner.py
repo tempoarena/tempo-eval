@@ -143,7 +143,8 @@ class Runner:
             server_url, self.run_dir / "server-runs", log_path=self.run_dir / "server.log"
         ) as client:
             health = client.health()
-            jobs = plan_jobs(self.suite, client.game(self.suite.game))
+            game_spec = client.game(self.suite.game)
+            jobs = plan_jobs(self.suite, game_spec)
             log(
                 f"[{self.suite.name}] {len(jobs)} matches on {client.base_url} "
                 f"(tempo {health.get('version')} {health.get('git_sha', '')[:12]})"
@@ -166,6 +167,8 @@ class Runner:
             "started_at": datetime.fromtimestamp(started, timezone.utc).isoformat(),
             "wall_s": round(time.time() - started, 3),
             "spent_usd": round(self.spent_usd, 6),
+            # prototype | approved (tempo docs/GAME_LIFECYCLE.md); publish ranks approved only
+            "game_status": game_spec.get("status"),
             "counts": _counts(records),
             "matches": [asdict(r) for r in records],
         }
