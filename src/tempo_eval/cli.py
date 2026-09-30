@@ -29,6 +29,13 @@ def cmd_run(a: argparse.Namespace) -> int:
     rc = 0
     for path in a.suites:
         suite = load_suite(path)
+        if a.only:
+            # keep only line-ups that seat one of these entrants, e.g. to add a new entrant
+            # to a suite without paying to re-run the others
+            suite.lineups = [lu for lu in suite.lineups if set(lu) & set(a.only)]
+            if not suite.lineups:
+                print(f"[{suite.name}] no line-up seats {a.only}; skipped")
+                continue
         if a.dry_run:
             for j in plan_jobs(suite, local_game_spec(suite.game)):
                 print(f"{j.index:3d} seed={j.seed} seats={[e.name for e in j.seats]}")
@@ -87,6 +94,9 @@ def main(argv: list[str] | None = None) -> int:
     r.add_argument("--server", help="use this server (http://host:port) instead of starting one")
     r.add_argument("--out", default="results")
     r.add_argument("--dry-run", action="store_true", help="print the match plan and stop")
+    r.add_argument(
+        "--only", action="append", help="run only line-ups seating this entrant (repeatable)"
+    )
     r.set_defaults(fn=cmd_run)
 
     pb = sub.add_parser("publish", help="results -> leaderboard.json + REPORT.md")

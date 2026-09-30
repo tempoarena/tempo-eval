@@ -11,9 +11,8 @@ seeds: {set: dev, count: 4}
 lineups:
   - [llm, bot:scripted]
   - [llm-skills, bot:scripted]
-  # needs TYPESAFE_API_KEY (Jev); re-enable when it is configured:
-  # - [jev, bot:scripted]
-  # - [hybrid, bot:scripted]
+  - [jev, bot:scripted]        # needs TYPESAFE_API_KEY in .env
+  - [hybrid, bot:scripted]     # LLM planner (luna) + Jev chooser
 rotation: none
 entrants:
   llm: {kind: agent, agent: llm, model: bedrock_mantle/openai.gpt-5.6-luna}
