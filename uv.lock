@@ -2300,7 +2300,7 @@ wheels = [
 [[package]]
 name = "tempo-arena"
 version = "0.1.0"
-source = { git = "https://github.com/tempoarena/tempo?rev=5d25777081b0afc3aa7413df9147afadb4dbaa2b#5d25777081b0afc3aa7413df9147afadb4dbaa2b" }
+source = { git = "https://github.com/tempoarena/tempo?rev=791c36e4a8a8f2b992a28395c1222f08bc04d822#791c36e4a8a8f2b992a28395c1222f08bc04d822" }
 dependencies = [
     { name = "numpy" },
     { name = "websockets", version = "16.1.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
@@ -2310,7 +2310,7 @@ dependencies = [
 [[package]]
 name = "tempo-baselines"
 version = "0.1.0"
-source = { git = "https://github.com/tempoarena/tempo?subdirectory=baselines&rev=5d25777081b0afc3aa7413df9147afadb4dbaa2b#5d25777081b0afc3aa7413df9147afadb4dbaa2b" }
+source = { git = "https://github.com/tempoarena/tempo?subdirectory=baselines&rev=791c36e4a8a8f2b992a28395c1222f08bc04d822#791c36e4a8a8f2b992a28395c1222f08bc04d822" }
 dependencies = [
     { name = "httpx" },
     { name = "litellm" },
@@ -2347,8 +2347,8 @@ requires-dist = [
     { name = "openskill", specifier = ">=6.0" },
     { name = "pydantic", specifier = ">=2.7" },
     { name = "pyyaml", specifier = ">=6.0" },
-    { name = "tempo-arena", marker = "extra == 'tempo'", git = "https://github.com/tempoarena/tempo?rev=5d25777081b0afc3aa7413df9147afadb4dbaa2b" },
-    { name = "tempo-baselines", marker = "extra == 'tempo'", git = "https://github.com/tempoarena/tempo?subdirectory=baselines&rev=5d25777081b0afc3aa7413df9147afadb4dbaa2b" },
+    { name = "tempo-arena", marker = "extra == 'tempo'", git = "https://github.com/tempoarena/tempo?rev=791c36e4a8a8f2b992a28395c1222f08bc04d822" },
+    { name = "tempo-baselines", marker = "extra == 'tempo'", git = "https://github.com/tempoarena/tempo?subdirectory=baselines&rev=791c36e4a8a8f2b992a28395c1222f08bc04d822" },
 ]
 provides-extras = ["tempo"]
 

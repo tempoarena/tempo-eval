@@ -34,6 +34,42 @@ def lineup(humans: int, vs: list[str]) -> list[Entrant]:
     return seats + [parse_entrant(v) for v in vs]
 
 
+def play_match_config(
+    game: str,
+    seats: list[Entrant],
+    config: dict,
+    seed: int,
+    clock: str,
+    perception_delay_ms: int,
+    join_timeout_s: float,
+) -> dict:
+    """`POST /matches` body for a live session.
+
+    Human seats are marked `"human": true`, which only the match creator can do (tempo
+    spec/protocol.md): people already have their own reaction time, so the server gives them no
+    perception delay. AI seats get the parity delay pinned explicitly, so an agent never inherits
+    a human's zero by accident.
+    """
+
+    def seat(e: Entrant) -> dict:
+        if e.kind == "bot":
+            return {"kind": "bot", "bot": e.bot}
+        if e.kind == "human":
+            return {"kind": "remote", "name": e.name, "human": True}
+        return {"kind": "remote", "name": e.name, "perception_delay_ms": perception_delay_ms}
+
+    return {
+        "game": game,
+        "config": config,
+        "seed": seed,
+        "clock": clock,
+        "perception_delay_ms": perception_delay_ms,
+        "seats": [seat(e) for e in seats],
+        "join_timeout_s": join_timeout_s,
+        "max_wall_s": 3 * 3600,
+    }
+
+
 def play(
     game: str,
     humans: int,
@@ -59,24 +95,12 @@ def play(
         lo, hi = (spec.get("seats") or {}).get("min", 1), (spec.get("seats") or {}).get("max", 99)
         if not lo <= len(seats) <= hi:
             raise ValueError(f"{game} takes {lo}..{hi} seats, lineup has {len(seats)}")
-        cfg = {
-            "game": game,
-            "config": config,
-            "seed": seed,
-            "clock": clock,
-            "perception_delay_ms": perception_delay_ms,
-            "seats": [
-                {"kind": "bot", "bot": e.bot}
-                if e.kind == "bot"
-                else {"kind": "remote", "name": e.name}
-                for e in seats
-            ],
-            "join_timeout_s": join_timeout_s,
-            "max_wall_s": 3 * 3600,
-        }
+        cfg = play_match_config(
+            game, seats, config, seed, clock, perception_delay_ms, join_timeout_s
+        )
         created = client.create_match(cfg)
         mid = str(created["match_id"])
-        teams = {s.get("index"): s.get("team") for s in created.get("seats", [])}
+        info = {s.get("index"): s for s in created.get("seats", [])}
         log(f"match {mid} ({game}, seed {seed}, {clock}) on {client.base_url}")
         procs = AgentProcs()
         for i, e in enumerate(seats):
@@ -88,7 +112,14 @@ def play(
                     None,
                 )
             who = e.name if e.kind != "bot" else f"bot:{e.bot}"
-            log(f"  seat {i} team {teams.get(i, '?')}: {who}")
+            seat = info.get(i, {})
+            delay = seat.get("perception_delay_ms")
+            log(f"  seat {i} team {seat.get('team', '?')}: {who}  (perception delay {delay} ms)")
+            if e.kind == "human" and delay:
+                log(
+                    f"      WARNING: human seat {i} has a {delay} ms delay; this server ignores "
+                    "`human: true` (tempo older than 791c36e?)"
+                )
             if e.kind == "human":
                 for url in join_urls(client.ws_url, mid, i):
                     log(f"      join: {url}")

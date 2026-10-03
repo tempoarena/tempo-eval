@@ -25,6 +25,7 @@ class FakeServer:
         self.play_s = play_s
         self.two_teams = two_teams
         self.prototypes: set[str] = {"tidefall"}
+        self.configs: list[dict] = []
         self.matches: dict[str, dict] = {}
         self._n = 0
         self._lock = threading.Lock()
@@ -105,8 +106,17 @@ class FakeServer:
             self._n += 1
             mid = f"m{self._n:04d}"
         n = len(cfg["seats"])
+        self.configs.append(cfg)
+        delay = cfg.get("perception_delay_ms", 150)
         seats = [
-            {"index": i, "team": self.team_of(i, n), "role": "player", "kind": s["kind"]}
+            {
+                "index": i,
+                "team": self.team_of(i, n),
+                "role": "player",
+                "kind": s["kind"],
+                # tempo's rule: explicit per-seat delay, else 0 for humans, else the match's
+                "perception_delay_ms": s.get("perception_delay_ms", 0 if s.get("human") else delay),
+            }
             for i, s in enumerate(cfg["seats"])
         ]
         self.matches[mid] = {"cfg": cfg, "t0": time.monotonic(), "seats": seats}

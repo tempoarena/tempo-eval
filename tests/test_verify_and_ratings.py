@@ -59,3 +59,27 @@ def test_agent_argv_routes_models_to_the_right_flag():
     assert hy[hy.index("--model") + 1] == "bedrock_mantle/x"
     assert hy[hy.index("--jev-model") + 1] == "jev-1"
     assert hy[hy.index("--seed") + 1] == "7" and hy[hy.index("--obs-mode") + 1] == "vision"
+
+
+def test_play_marks_human_seats_and_prints_every_seats_delay(tmp_path, fake_server, fake_agent):
+    from tempo_eval.play import play
+
+    lines: list[str] = []
+    out = play(
+        "snake",
+        1,
+        ["llm", "bot:scripted"],
+        fake_server.url,
+        tmp_path,
+        seed=3,
+        config={},
+        log=lines.append,
+    )
+    assert out["status"] == "finished"
+    seats = fake_server.configs[-1]["seats"]
+    assert seats[0] == {"kind": "remote", "name": "human0", "human": True}
+    assert seats[1]["perception_delay_ms"] == 150 and "human" not in seats[1]
+    assert seats[2] == {"kind": "bot", "bot": "scripted"}
+    text = "\n".join(lines)
+    assert "seat 0 team 0: human0  (perception delay 0 ms)" in text
+    assert "(perception delay 150 ms)" in text and "WARNING" not in text

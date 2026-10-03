@@ -17,8 +17,8 @@ dependencies = [
 # The pinned tempo: engine + server + client, and the baseline agents. One SHA, bumped with
 # scripts/bump-tempo.sh. Kept optional so tests (fake server) run without building Rust.
 tempo = [
-    "tempo-arena @ git+https://github.com/tempoarena/tempo@5d25777081b0afc3aa7413df9147afadb4dbaa2b",
-    "tempo-baselines @ git+https://github.com/tempoarena/tempo@5d25777081b0afc3aa7413df9147afadb4dbaa2b#subdirectory=baselines",
+    "tempo-arena @ git+https://github.com/tempoarena/tempo@791c36e4a8a8f2b992a28395c1222f08bc04d822",
+    "tempo-baselines @ git+https://github.com/tempoarena/tempo@791c36e4a8a8f2b992a28395c1222f08bc04d822#subdirectory=baselines",
 ]
 
 [project.scripts]
